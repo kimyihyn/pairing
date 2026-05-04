@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sommelier&rsquo;s Table · 인터랙티브 와인 아틀리에</title>
+<title>Sommelier&rsquo;s Table · 인터랙티브 와인 마리아주</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500;1,700&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -952,6 +952,7 @@ const WINES = {
   port:       { name: 'Port',               kind: '주정강화 디저트', color: '#3D0F1F', cat: 'dessert' },
   sauternes:  { name: 'Sauternes',          kind: '디저트 화이트',   color: '#D4A038', cat: 'dessert' },
   rose:       { name: 'Rosé',               kind: '로제',           color: '#E58A8A', cat: 'rose' },
+  tempranillo:{ name: 'Tempranillo',        kind: '풀바디 레드',    color: '#8B0000', cat: 'red' },
 };
 
 const DISHES = [
@@ -983,7 +984,7 @@ const DISHES = [
 
 const WINE_PROFILES = {
   // body, tannin, acidity, sweetness, oak  (1~10)
-  cabernet:   [8, 8, 5, 1, 7],
+  cabernet:   [8, 8, 7, 1, 7],
   malbec:     [8, 7, 5, 2, 6],
   pinot:      [4, 4, 7, 1, 4],
   chianti:    [6, 6, 8, 1, 4],
@@ -998,6 +999,8 @@ const WINE_PROFILES = {
   port:       [9, 6, 4, 9, 6],
   sauternes:  [7, 1, 6, 9, 5],
   rose:       [4, 2, 7, 3, 2],
+  tempranillo:[8 ,8, 4, 1, 6]
+  
 };
 const WINE_DESC = {
   cabernet:   '진하고 구조감 있는 풀바디. 검은 과실, 시더, 가죽.',
@@ -1015,6 +1018,7 @@ const WINE_DESC = {
   sauternes:  '꿀과 살구, 보트라이트. 황금빛 디저트.',
   malbec:     '플럼, 자두, 매끈한 탄닌. 아르헨티나의 자존심.',
   rose:       '딸기와 수박, 봄바람 같은 산미.',
+  temranillo: '체리, 얼린 무화과, 스페인 리오하.',
 };
 
 const FLAVORS = [
