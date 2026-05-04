@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sommelier&rsquo;s Table · 인터랙티브 와인 아틀리에</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500;1,700&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================= Reset & tokens ================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0E0608;
+  --bg-2: #1A0B10;
+  --paper: #F5EFE3;
+  --paper-2: #ECE3CF;
+  --wine: #6B1F2C;
+  --wine-deep: #3D0F18;
+  --wine-glow: #C75A6A;
+  --gold: #C5A572;
+  --gold-soft: #E5CFA0;
+  --ink: #1A0A0E;
+  --muted: rgba(245,239,227,0.55);
+  --line: rgba(245,239,227,0.12);
+  --serif: 'Playfair Display', 'Noto Serif KR', Georgia, serif;
+  --sans: 'Pretendard', -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+  --easing: cubic-bezier(0.22, 1, 0.36, 1);
+}
+html, body { background: var(--bg); color: var(--paper); }
+body {
+  font-family: var(--sans); line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; cursor: none;
+}
+button { font-family: inherit; cursor: none; border: none; background: none; color: inherit; }
+a { color: inherit; text-decoration: none; cursor: none; }
+img { display: block; max-width: 100%; }
+
+/* ================= Custom cursor (wine glass) ================= */
+.cursor {
+  position: fixed; top: 0; left: 0;
+  width: 28px; height: 28px;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+  transition: transform .25s var(--easing), width .25s, height .25s;
+}
+.cursor::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1.5px solid var(--gold);
+  border-radius: 50%;
+}
+.cursor.hover { width: 56px; height: 56px; }
+.cursor-dot {
+  position: fixed; top: 0; left: 0;
+  width: 5px; height: 5px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+/* ================= Background ambience ================= */
+.ambient {
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(800px 600px at 15% 10%, rgba(107,31,44,0.25), transparent 60%),
+    radial-gradient(700px 500px at 85% 80%, rgba(197,165,114,0.10), transparent 60%),
+    linear-gradient(180deg, #0E0608, #1A0B10 60%, #0E0608);
+}
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: 0.06; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+}
+
+/* ================= Layout ================= */
+.shell { max-width: 1280px; margin: 0 auto; padding: 28px 36px; position: relative; z-index: 1; }
+@media (max-width: 720px) { .shell { padding: 18px 16px; } }
+
+/* ================= Nav ================= */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 6px; margin-bottom: 36px;
+}
+.brand {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--serif); font-style: italic;
+  font-size: 22px; font-weight: 700;
+  color: var(--gold); user-select: none;
+}
+.brand .dot {
+  display: inline-block; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--wine-glow);
+  margin-right: 4px; transform: translateY(-2px);
+}
+.nav-links { display: flex; gap: 28px; }
+.nav-links a {
+  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); position: relative;
+  transition: color .3s var(--easing);
+}
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: -6px;
+  width: 0; height: 1px; background: var(--gold);
+  transition: width .35s var(--easing);
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-links a:hover::after { width: 100%; }
+@media (max-width: 720px) {
+  .nav-links { display: none; }
+}
+
+/* ================= HERO ================= */
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
+  align-items: center;
+  min-height: 78vh;
+  padding: 40px 0 80px;
+}
+.hero-eyebrow {
+  font-size: 12px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(56px, 8vw, 124px);
+  font-weight: 800; line-height: 0.92;
+  letter-spacing: -0.02em;
+}
+.hero h1 .it { font-style: italic; font-weight: 500; color: var(--gold); }
+.hero h1 .small {
+  display: block;
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 500; font-style: italic;
+  color: var(--paper-2);
+  margin-top: 12px;
+  letter-spacing: -0.005em;
+}
+.hero-sub {
+  margin-top: 28px;
+  font-size: 17px; line-height: 1.65;
+  max-width: 480px; color: var(--paper-2);
+}
+.hero-cta-row { margin-top: 36px; display: flex; gap: 14px; flex-wrap: wrap; }
+.cta {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px;
+  background: var(--gold); color: var(--ink);
+  border-radius: 999px;
+  font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-weight: 600;
+  transition: transform .3s var(--easing), background .3s var(--easing);
+}
+.cta:hover { transform: translateY(-3px); background: var(--gold-soft); }
+.cta-ghost {
+  background: transparent; color: var(--paper);
+  border: 1px solid var(--line);
+}
+.cta-ghost:hover { border-color: var(--gold); color: var(--gold); background: transparent; }
+
+.hero-glass-wrap {
+  position: relative;
+  aspect-ratio: 1/1.1;
+  display: grid; place-items: center;
+}
+.hero-glass {
+  width: 80%; height: auto;
+  filter: drop-shadow(0 30px 50px rgba(107,31,44,0.5));
+}
+.hero-pulse {
+  position: absolute; inset: 8%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(199,90,106,0.18), transparent 70%);
+  animation: pulse 3.5s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+@keyframes liquidWobble {
+  0%, 100% { d: path('M 60 320 Q 200 305 340 320 L 340 540 L 60 540 Z'); }
+  50%      { d: path('M 60 320 Q 200 335 340 320 L 340 540 L 60 540 Z'); }
+}
+.hero-glass .liquid {
+  fill: url(#wineGrad);
+  animation: liquidWobble 4s ease-in-out infinite;
+}
+@media (max-width: 880px) {
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero-glass-wrap { max-width: 360px; margin: 0 auto; }
+}
+
+/* ================= Section frame ================= */
+section.act {
+  margin: 60px 0;
+  padding: 60px 64px;
+  background: linear-gradient(180deg, rgba(245,239,227,0.04), rgba(245,239,227,0.02));
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+}
+section.act::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.5;
+}
+.act-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: 24px;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.act-eyebrow {
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600;
+}
+.act-num {
+  font-family: var(--serif); font-style: italic;
+  color: var(--muted);
+  font-size: 16px;
+}
+.act-title {
+  font-family: var(--serif);
+  font-size: clamp(40px, 4.5vw, 64px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  margin-top: 10px;
+}
+.act-title em { font-style: italic; font-weight: 500; color: var(--gold); }
+.act-aside { max-width: 360px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+@media (max-width: 720px) {
+  section.act { padding: 36px 22px; border-radius: 20px; }
+}
+
+/* ================= ACT 1 — Pairing Quiz ================= */
+.quiz {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 44px;
+  align-items: stretch;
+}
+.dish-card {
+  position: relative;
+  background: linear-gradient(160deg, var(--wine-deep), var(--wine));
+  border-radius: 24px;
+  padding: 44px 38px;
+  min-height: 360px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.dish-card::after {
+  content: ''; position: absolute;
+  bottom: -40%; right: -20%; width: 80%; height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+}
+.dish-emoji {
+  font-size: 96px;
+  line-height: 1; margin-bottom: 16px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+  transition: transform .4s var(--easing);
+}
+.dish-card.flip .dish-emoji { animation: flip 0.6s var(--easing); }
+@keyframes flip {
+  0% { transform: rotateY(0); }
+  50% { transform: rotateY(90deg) scale(0.8); }
+  100% { transform: rotateY(0); }
+}
+.dish-label {
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--gold-soft); margin-bottom: 6px;
+}
+.dish-name {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.05;
+  margin-bottom: 8px;
+}
+.dish-desc { color: var(--paper-2); font-size: 14.5px; line-height: 1.6; max-width: 320px; }
+.dish-meta {
+  margin-top: auto;
+  display: flex; gap: 14px;
+  padding-top: 24px;
+}
+.dish-tag {
+  font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 6px 12px; border: 1px solid rgba(245,239,227,0.3);
+  border-radius: 999px;
+}
+
+.quiz-right { display: flex; flex-direction: column; gap: 22px; }
+.quiz-meta {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.qm {
+  background: rgba(245,239,227,0.04);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.qm .k {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px;
+}
+.qm .v {
+  font-family: var(--serif); font-size: 22px; font-weight: 700;
+  color: var(--gold);
+}
+.qm .v small { font-size: 14px; color: var(--paper-2); font-weight: 500; }
+
+.wine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.wine-opt {
+  position: relative;
+  background: rgba(245,239,227,0.05);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 22px 22px 88px;
+  text-align: left;
+  display: flex; flex-direction: column; gap: 6px;
+  overflow: hidden;
+  transition: transform .3s var(--easing), border-color .3s var(--easing), background .3s var(--easing);
+}
+.wine-opt:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  background: rgba(245,239,227,0.08);
+}
+.wine-bottle {
+  position: absolute;
+  left: 22px; top: 50%; transform: translateY(-50%);
+  width: 48px; height: 110px;
+}
+.wine-opt .name {
+  font-family: var(--serif);
+  font-size: 19px; font-weight: 700;
+  letter-spacing: -0.005em;
+}
+.wine-opt .kind {
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+}
+.wine-opt.correct {
+  background: linear-gradient(135deg, rgba(98,166,109,0.25), rgba(98,166,109,0.08));
+  border-color: #6FB47F;
+  animation: pop 0.4s var(--easing);
+}
+.wine-opt.wrong {
+  background: linear-gradient(135deg, rgba(199,90,106,0.25), rgba(199,90,106,0.08));
+  border-color: var(--wine-glow);
+  animation: shake 0.4s var(--easing);
+}
+@keyframes pop {
+  0% { transform: scale(0.97); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.wine-opt[disabled] { opacity: 0.55; cursor: not-allowed; }
+.wine-opt[disabled]:hover { transform: none; }
+
+.quiz-feedback {
+  background: rgba(197,165,114,0.06);
+  border: 1px solid rgba(197,165,114,0.25);
+  border-radius: 16px;
+  padding: 18px 22px;
+  font-size: 14px; color: var(--paper-2); line-height: 1.65;
+  min-height: 64px;
+  transition: opacity .3s var(--easing);
+}
+.quiz-feedback.empty { opacity: 0; }
+.quiz-feedback strong { color: var(--gold); }
+
+.quiz-actions { display: flex; gap: 10px; }
+.btn-mini {
+  padding: 12px 20px;
+  background: rgba(245,239,227,0.06);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--paper); font-weight: 600;
+  transition: background .3s var(--easing), border-color .3s var(--easing);
+}
+.btn-mini:hover { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+
+@media (max-width: 880px) {
+  .quiz { grid-template-columns: 1fr; }
+  .wine-grid { grid-template-columns: 1fr; }
+}
+
+/* ================= ACT 2 — Flavor Wheel ================= */
+.wheel-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 44px;
+  align-items: center;
+}
+.wheel-svg-box { display: grid; place-items: center; }
+.wheel-svg {
+  width: 100%; max-width: 480px;
+  filter: drop-shadow(0 20px 40px rgba(107,31,44,0.4));
+}
+.wheel-sector {
+  cursor: none;
+  transition: opacity .3s var(--easing), transform .3s var(--easing);
+  transform-origin: center;
+}
+.wheel-sector:hover { opacity: 0.85; }
+.wheel-sector.active {
+  filter: brightness(1.3) saturate(1.3);
+}
+.wheel-side h4 {
+  font-family: var(--serif);
+  font-size: 22px; font-weight: 700;
+  margin-bottom: 12px;
+}
+.wheel-side p {
+  font-size: 14px; line-height: 1.7; color: var(--paper-2);
+  margin-bottom: 24px;
+}
+.notes-list {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  min-height: 100px; align-content: flex-start;
+}
+.note-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: rgba(245,239,227,0.08);
+  border: 1px solid rgba(245,239,227,0.18);
+  border-radius: 999px;
+  font-size: 13px;
+  animation: dropIn 0.35s var(--easing);
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.note-chip .swatch {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.notes-empty { color: var(--muted); font-style: italic; font-size: 13px; }
+.profile-card {
+  margin-top: 24px;
+  padding: 22px;
+  background: rgba(245,239,227,0.04);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px 14px 14px 4px;
+}
+.profile-card .pcat {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.profile-card .pname {
+  font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--gold);
+}
+@media (max-width: 880px) { .wheel-wrap { grid-template-columns: 1fr; } }
+
+/* ================= ACT 3 — Wine Builder ================= */
+.builder {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap: 36px;
+  align-items: stretch;
+}
+.sliders { display: flex; flex-direction: column; gap: 22px; }
+.slider-row label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+}
+.slider-row label .val {
+  font-family: var(--serif); font-style: italic;
+  color: var(--gold);
+  font-size: 16px;
+  letter-spacing: 0;
+}
+.slider-row input[type=range] {
+  appearance: none; -webkit-appearance: none;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--p, 50%), rgba(245,239,227,0.15) var(--p, 50%));
+  border-radius: 999px;
+  outline: none;
+  cursor: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%; background: var(--gold);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--gold);
+  cursor: none;
+  transition: transform .2s var(--easing);
+}
+.slider-row input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.slider-row input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%; background: var(--gold);
+  border: 3px solid var(--bg);
+  cursor: none;
+}
+.slider-row .scale {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.radar-box { display: grid; place-items: center; }
+.radar-svg { width: 100%; max-width: 360px; }
+.radar-poly {
+  fill: rgba(197,165,114,0.25);
+  stroke: var(--gold);
+  stroke-width: 2;
+  transition: d 0.5s var(--easing), points 0.5s var(--easing);
+}
+.radar-axis { stroke: rgba(245,239,227,0.12); stroke-width: 1; }
+.radar-grid { fill: none; stroke: rgba(245,239,227,0.08); stroke-width: 1; }
+.radar-label {
+  fill: var(--paper-2);
+  font-size: 11px;
+  font-family: var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.match-box {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 28px;
+  background: rgba(245,239,227,0.04);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+}
+.match-box .lbl {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); font-weight: 600; margin-bottom: 8px;
+}
+.match-box .name {
+  font-family: var(--serif);
+  font-size: 36px; font-weight: 700; line-height: 1.05;
+  margin-bottom: 6px;
+}
+.match-box .name em { font-style: italic; font-weight: 500; }
+.match-box .desc { font-size: 14px; line-height: 1.65; color: var(--paper-2); }
+.match-box .traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.match-box .trait {
+  font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 5px 10px;
+  border: 1px solid var(--line); border-radius: 999px;
+}
+@media (max-width: 980px) {
+  .builder { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* ================= ACT 4 — Stats Dashboard ================= */
+.dash {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat {
+  padding: 24px;
+  background: rgba(245,239,227,0.04);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.stat .lbl {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.stat .num {
+  font-family: var(--serif);
+  font-size: 44px; font-weight: 700; line-height: 1;
+  color: var(--gold);
+}
+.stat .num small { font-size: 18px; color: var(--paper-2); margin-left: 4px; }
+
+.bars {
+  background: rgba(245,239,227,0.03);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px 32px;
+}
+.bars h4 {
+  font-family: var(--serif);
+  font-size: 18px; font-weight: 600;
+  margin-bottom: 22px;
+}
+.bar-row {
+  display: grid; grid-template-columns: 130px 1fr 60px;
+  align-items: center; gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.bar-row:last-child { border-bottom: none; }
+.bar-row .nm {
+  font-size: 13px; color: var(--paper-2);
+}
+.bar-track {
+  height: 6px; background: rgba(245,239,227,0.08);
+  border-radius: 999px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--wine), var(--gold));
+  border-radius: 999px;
+  width: 0;
+  transition: width 1s var(--easing);
+}
+.bar-row .pct {
+  text-align: right;
+  font-family: var(--serif); font-style: italic;
+  color: var(--gold); font-size: 15px;
+}
+@media (max-width: 720px) {
+  .dash { grid-template-columns: repeat(2, 1fr); }
+  .bar-row { grid-template-columns: 100px 1fr 50px; gap: 10px; }
+}
+
+/* ================= Toast ================= */
+.toast-wrap {
+  position: fixed; top: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 200; pointer-events: none;
+  display: flex; flex-direction: column; gap: 10px; align-items: center;
+}
+.toast {
+  background: var(--gold); color: var(--ink);
+  padding: 14px 24px; border-radius: 999px;
+  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  animation: toastIn 0.3s var(--easing);
+}
+.toast.bad { background: var(--wine-glow); color: var(--paper); }
+.toast.streak {
+  background: var(--paper); color: var(--wine);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast.out { animation: toastOut 0.3s var(--easing) forwards; }
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
+/* ================= Confetti ================= */
+.confetti-piece {
+  position: fixed; top: -10px;
+  width: 8px; height: 14px;
+  pointer-events: none; z-index: 150;
+  animation: fall 2.4s ease-out forwards;
+}
+@keyframes fall {
+  to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
+
+/* ================= Footer ================= */
+footer {
+  margin: 60px 0 24px;
+  padding: 36px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  font-size: 12px; letter-spacing: 0.14em; color: var(--muted);
+}
+footer a { color: var(--gold); }
+footer .secret {
+  cursor: none; user-select: none;
+}
+
+/* Reveal */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .8s var(--easing), transform .8s var(--easing);
+}
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+@media (hover: none) { body { cursor: auto; } .cursor, .cursor-dot { display: none; } button, a, input { cursor: pointer; } }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="grain"></div>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- Toast region -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="shell">
+
+  <!-- ======= NAV ======= -->
+  <nav class="nav">
+    <div class="brand" id="brand">
+      <span class="dot"></span>SOMMELIER&rsquo;S TABLE
+    </div>
+    <div class="nav-links">
+      <a href="#pairing" data-link>페어링</a>
+      <a href="#wheel"   data-link>플레이버 휠</a>
+      <a href="#builder" data-link>와인 빌더</a>
+      <a href="#stats"   data-link>통계</a>
+    </div>
+  </nav>
+
+  <!-- ======= HERO ======= -->
+  <header class="hero">
+    <div>
+      <div class="hero-eyebrow">Atelier · No.01</div>
+      <h1>
+        Pour, <span class="it">pair,</span><br/>
+        play.
+        <span class="small">와인을 따르고, 짝짓고, 즐기는<br/>인터랙티브 미식 아틀리에</span>
+      </h1>
+      <p class="hero-sub">
+        4가지 미니 게임으로 와인 페어링의 감각을 깨워보세요.
+        클릭, 드래그, 그리고 약간의 호기심만 있으면 충분합니다.
+      </p>
+      <div class="hero-cta-row">
+        <a href="#pairing" class="cta" data-link>
+          <span>페어링 시작</span><span>→</span>
+        </a>
+        <a href="#wheel" class="cta cta-ghost" data-link>플레이버 휠 보기</a>
+      </div>
+    </div>
+
+    <div class="hero-glass-wrap">
+      <div class="hero-pulse"></div>
+      <svg class="hero-glass" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="wineGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stop-color="#A8344A"/>
+            <stop offset="100%" stop-color="#3D0F18"/>
+          </linearGradient>
+          <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"  stop-color="rgba(245,239,227,0.3)"/>
+            <stop offset="50%" stop-color="rgba(245,239,227,0.05)"/>
+            <stop offset="100%" stop-color="rgba(245,239,227,0.3)"/>
+          </linearGradient>
+        </defs>
+        <!-- Bowl -->
+        <path d="M 60 80
+                 Q 60 320 200 340
+                 Q 340 320 340 80
+                 Q 200 110 60 80 Z"
+              fill="url(#glassGrad)"
+              stroke="rgba(245,239,227,0.55)" stroke-width="1.5"/>
+        <!-- Liquid -->
+        <clipPath id="bowlClip">
+          <path d="M 60 80 Q 60 320 200 340 Q 340 320 340 80 Q 200 110 60 80 Z"/>
+        </clipPath>
+        <g clip-path="url(#bowlClip)">
+          <path class="liquid" d="M 60 220 Q 200 205 340 220 L 340 540 L 60 540 Z" fill="url(#wineGrad)"/>
+        </g>
+        <!-- Stem -->
+        <rect x="197" y="340" width="6" height="170" fill="rgba(245,239,227,0.45)"/>
+        <!-- Base -->
+        <ellipse cx="200" cy="520" rx="80" ry="10" fill="rgba(245,239,227,0.45)"/>
+        <!-- Highlight -->
+        <path d="M 80 100 Q 80 240 100 290" stroke="rgba(245,239,227,0.45)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- ======= ACT 1 — Pairing Quiz ======= -->
+  <section class="act reveal" id="pairing">
+    <div class="act-header">
+      <div>
+        <div class="act-eyebrow">Act 1 · The Pairing</div>
+        <div class="act-num">— No.01 / 04 —</div>
+        <h2 class="act-title">오늘의 <em>페어링</em> 챌린지</h2>
+      </div>
+      <p class="act-aside">한 접시가 차려졌습니다. 가장 잘 어울리는 와인을 골라 점수를 쌓아보세요. 연속 3회 정답이면 <strong style="color:var(--gold)">소믈리에 스트릭</strong> 보너스.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="dish-card" id="dishCard">
+        <div class="dish-emoji" id="dishEmoji">🍷</div>
+        <div class="dish-label" id="dishLabel">TODAY&rsquo;S DISH</div>
+        <div class="dish-name" id="dishName">불러오는 중…</div>
+        <p class="dish-desc" id="dishDesc"></p>
+        <div class="dish-meta" id="dishMeta"></div>
+      </div>
+
+      <div class="quiz-right">
+        <div class="quiz-meta">
+          <div class="qm"><div class="k">Round</div><div class="v"><span id="round">0</span><small>/10</small></div></div>
+          <div class="qm"><div class="k">Score</div><div class="v" id="score">0</div></div>
+          <div class="qm"><div class="k">Streak</div><div class="v"><span id="streak">0</span><small>🔥</small></div></div>
+        </div>
+
+        <div class="wine-grid" id="wineGrid"></div>
+
+        <div class="quiz-feedback empty" id="quizFb">와인을 선택해보세요.</div>
+
+        <div class="quiz-actions">
+          <button class="btn-mini" id="nextBtn">다음 접시 →</button>
+          <button class="btn-mini" id="resetQuiz">처음부터</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= ACT 2 — Flavor Wheel ======= -->
+  <section class="act reveal" id="wheel">
+    <div class="act-header">
+      <div>
+        <div class="act-eyebrow">Act 2 · The Wheel</div>
+        <div class="act-num">— No.02 / 04 —</div>
+        <h2 class="act-title">테이스팅 <em>플레이버 휠</em></h2>
+      </div>
+      <p class="act-aside">섹터를 클릭해 당신이 좋아하는 향을 켜보세요. 휠은 살아있는 것처럼 응답하고, 우측에 당신만의 미각 프로필이 그려집니다.</p>
+    </div>
+
+    <div class="wheel-wrap">
+      <div class="wheel-svg-box">
+        <svg class="wheel-svg" id="wheelSvg" viewBox="-200 -200 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="wheel-side">
+        <h4>당신의 향 노트</h4>
+        <p>섹터를 클릭하면 노트가 추가됩니다. 다시 클릭하면 빠집니다.</p>
+        <div class="notes-list" id="notesList">
+          <span class="notes-empty">아직 선택된 노트가 없어요.</span>
+        </div>
+        <div class="profile-card">
+          <div class="pcat">Profile</div>
+          <div class="pname" id="profileName">아직 미정</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= ACT 3 — Wine Builder ======= -->
+  <section class="act reveal" id="builder">
+    <div class="act-header">
+      <div>
+        <div class="act-eyebrow">Act 3 · The Build</div>
+        <div class="act-num">— No.03 / 04 —</div>
+        <h2 class="act-title">당신의 <em>와인을</em> 빚어보세요</h2>
+      </div>
+      <p class="act-aside">5가지 차원으로 와인의 캐릭터를 조각합니다. 슬라이더를 움직이면 레이더가 함께 숨쉬고, 가장 닮은 와인 스타일이 떠오릅니다.</p>
+    </div>
+
+    <div class="builder">
+      <div class="sliders">
+        <div class="slider-row">
+          <label>바디 <span class="val" data-for="body">5</span></label>
+          <input type="range" min="1" max="10" value="5" id="s-body"/>
+          <div class="scale"><span>Light</span><span>Full</span></div>
+        </div>
+        <div class="slider-row">
+          <label>탄닌 <span class="val" data-for="tannin">5</span></label>
+          <input type="range" min="1" max="10" value="5" id="s-tannin"/>
+          <div class="scale"><span>Soft</span><span>Firm</span></div>
+        </div>
+        <div class="slider-row">
+          <label>산도 <span class="val" data-for="acidity">5</span></label>
+          <input type="range" min="1" max="10" value="5" id="s-acidity"/>
+          <div class="scale"><span>Round</span><span>Crisp</span></div>
+        </div>
+        <div class="slider-row">
+          <label>당도 <span class="val" data-for="sweetness">3</span></label>
+          <input type="range" min="1" max="10" value="3" id="s-sweetness"/>
+          <div class="scale"><span>Dry</span><span>Sweet</span></div>
+        </div>
+        <div class="slider-row">
+          <label>오크 <span class="val" data-for="oak">4</span></label>
+          <input type="range" min="1" max="10" value="4" id="s-oak"/>
+          <div class="scale"><span>None</span><span>Heavy</span></div>
+        </div>
+      </div>
+
+      <div class="radar-box">
+        <svg class="radar-svg" id="radarSvg" viewBox="-180 -180 360 360"></svg>
+      </div>
+
+      <div class="match-box">
+        <div class="lbl">Closest Match</div>
+        <div class="name" id="matchName">—</div>
+        <p class="desc" id="matchDesc">슬라이더를 움직여보세요.</p>
+        <div class="traits" id="matchTraits"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= ACT 4 — Stats Dashboard ======= -->
+  <section class="act reveal" id="stats">
+    <div class="act-header">
+      <div>
+        <div class="act-eyebrow">Act 4 · The Data</div>
+        <div class="act-num">— No.04 / 04 —</div>
+        <h2 class="act-title">당신의 <em>미식</em> 데이터</h2>
+      </div>
+      <p class="act-aside">페어링 게임을 플레이할수록 이 대시보드가 함께 성장합니다. 카테고리별 정답률을 확인하고, 약한 영역을 찾아보세요.</p>
+    </div>
+
+    <div class="dash">
+      <div class="stat"><div class="lbl">Total Rounds</div><div class="num" id="dTotal">0</div></div>
+      <div class="stat"><div class="lbl">Accuracy</div><div class="num"><span id="dAcc">0</span><small>%</small></div></div>
+      <div class="stat"><div class="lbl">Best Streak</div><div class="num"><span id="dBest">0</span><small>🔥</small></div></div>
+      <div class="stat"><div class="lbl">Top Category</div><div class="num" id="dTop" style="font-size:24px;line-height:1.2;">—</div></div>
+    </div>
+
+    <div class="bars">
+      <h4>카테고리별 정답률</h4>
+      <div id="barChart"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 · <span class="secret" id="secret">Sommelier&rsquo;s Table</span> — crafted with ♥ for the love of pairing.</span>
+    <a href="index.html">← 포트폴리오로</a>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const WINES = {
+  cabernet:   { name: 'Cabernet Sauvignon', kind: '풀바디 레드',     color: '#3D0F18', cat: 'red' },
+  malbec:     { name: 'Malbec',             kind: '풀바디 레드',     color: '#2A0810', cat: 'red' },
+  pinot:      { name: 'Pinot Noir',         kind: '미디엄 레드',     color: '#722F37', cat: 'red' },
+  chianti:    { name: 'Chianti',            kind: '미디엄 레드',     color: '#8B2635', cat: 'red' },
+  syrah:      { name: 'Syrah',              kind: '풀바디 레드',     color: '#3A0A14', cat: 'red' },
+  beaujolais: { name: 'Beaujolais',         kind: '라이트 레드',     color: '#A0414F', cat: 'red' },
+  chardonnay: { name: 'Chardonnay',         kind: '오크 화이트',     color: '#D4B96B', cat: 'white' },
+  sauvblanc:  { name: 'Sauvignon Blanc',    kind: '드라이 화이트',   color: '#E5DC8D', cat: 'white' },
+  riesling:   { name: 'Riesling',           kind: '오프드라이 화이트', color: '#F0DB8B', cat: 'white' },
+  gewurz:     { name: 'Gewürztraminer',     kind: '아로마틱 화이트', color: '#E8C97A', cat: 'white' },
+  champagne:  { name: 'Champagne',          kind: '스파클링',       color: '#F5E6A8', cat: 'sparkling' },
+  prosecco:   { name: 'Prosecco',           kind: '스파클링',       color: '#F0E0A0', cat: 'sparkling' },
+  port:       { name: 'Port',               kind: '주정강화 디저트', color: '#3D0F1F', cat: 'dessert' },
+  sauternes:  { name: 'Sauternes',          kind: '디저트 화이트',   color: '#D4A038', cat: 'dessert' },
+  rose:       { name: 'Rosé',               kind: '로제',           color: '#E58A8A', cat: 'rose' },
+};
+
+const DISHES = [
+  { emoji: '🥩', name: '두툼한 채끝 스테이크',     desc: '미디엄 레어, 그뤼에르 포테이토 곁들임.',     tags: ['풀바디','탄닌','육즙'],
+    correct: ['cabernet','malbec','syrah'], why: '진한 단백질과 지방이 단단한 탄닌과 만나면 둘 다 부드러워져요. <strong>풀바디 레드</strong>가 정답.', cat: 'red' },
+  { emoji: '🐟', name: '연어 그릴',           desc: '레몬 버터와 허브로 마무리한 노르웨이 연어.',  tags: ['지방','담백'],
+    correct: ['pinot','chardonnay'], why: '기름진 연어의 풍미를 흙내음 있는 <strong>피노 누아</strong>나 오크 샤르도네가 받쳐줍니다.', cat: 'white' },
+  { emoji: '🦪', name: '굴 한 접시',           desc: '바다 냄새 가득한 생굴, 레몬 한 조각.',          tags: ['해산물','미네랄'],
+    correct: ['champagne','sauvblanc'], why: '굴의 짠맛·미네랄과 만나는 건 산도 높은 <strong>스파클링/소비뇽 블랑</strong>.', cat: 'sparkling' },
+  { emoji: '🍝', name: '토마토 파스타',         desc: '바질, 마늘, 잘 익은 토마토 소스의 산도가 두드러진다.', tags: ['산도','토마토'],
+    correct: ['chianti'], why: '토마토의 산도와 짝이 되는 건 같은 산도의 이탈리아 <strong>키안티</strong>. "산도 vs 산도"의 법칙.', cat: 'red' },
+  { emoji: '🍣', name: '오마카세 스시',          desc: '얇게 저민 광어와 참치 토로, 와사비.',           tags: ['섬세','우마미'],
+    correct: ['riesling','champagne'], why: '섬세한 우마미를 깨우려면 가벼운 단맛과 산도. <strong>리슬링·샴페인</strong>이 안전.', cat: 'sparkling' },
+  { emoji: '🌶️', name: '매콤 떡볶이',           desc: '캡사이신이 혀를 자극하는 빨간 국물.',           tags: ['매운맛','단맛'],
+    correct: ['riesling','gewurz'], why: '매운맛은 약간의 잔당으로 가라앉습니다. <strong>오프드라이 리슬링</strong>이 매운 음식의 정석.', cat: 'white' },
+  { emoji: '🧀', name: '숙성 치즈 보드',         desc: '파마산, 고르곤졸라, 만체고. 짠맛과 감칠맛.',     tags: ['풍미','짠맛'],
+    correct: ['port','cabernet'], why: '강한 풍미는 강한 와인으로. <strong>포트</strong>나 풀바디 레드가 어울립니다.', cat: 'dessert' },
+  { emoji: '🍫', name: '다크 초콜릿 디저트',     desc: '70% 카카오, 살짝의 산딸기.',               tags: ['단맛','쓴맛'],
+    correct: ['port','sauternes'], why: '디저트는 디저트보다 더 단 와인이 정답. <strong>포트·소테른</strong>으로 마무리.', cat: 'dessert' },
+  { emoji: '🍗', name: '로스트 치킨',           desc: '로즈마리와 마늘로 천천히 구운 닭 다리살.',       tags: ['담백','허브'],
+    correct: ['chardonnay','pinot','beaujolais'], why: '닭은 카멜레온. 가벼운 레드도, 오크 화이트도 잘 맞아요.', cat: 'white' },
+  { emoji: '🥗', name: '샐러드 & 염소치즈',      desc: '루꼴라, 견과, 비네그레트와 염소치즈.',          tags: ['신선','산미'],
+    correct: ['sauvblanc'], why: '풀맛 향의 <strong>소비뇽 블랑</strong>이 염소치즈를 만났을 때의 클래식.', cat: 'white' },
+  { emoji: '🍕', name: '마르게리타 피자',         desc: '얇은 도우, 바질, 모짜렐라, 토마토.',            tags: ['이탈리안','산도'],
+    correct: ['chianti','beaujolais','prosecco'], why: '가벼운 이탈리아 레드, 또는 가볍게 거품진 <strong>프로세코</strong>도 좋아요.', cat: 'red' },
+  { emoji: '🦞', name: '버터 랍스터',           desc: '레몬 버터에 졸인 랍스터 꼬리.',                tags: ['고급','버터'],
+    correct: ['chardonnay','champagne'], why: '버터에는 버터. 오크 <strong>샤르도네</strong>가 랍스터의 클래식 페어링.', cat: 'white' },
+];
+
+const WINE_PROFILES = {
+  // body, tannin, acidity, sweetness, oak  (1~10)
+  cabernet:   [8, 8, 5, 1, 7],
+  malbec:     [8, 7, 5, 2, 6],
+  pinot:      [4, 4, 7, 1, 4],
+  chianti:    [6, 6, 8, 1, 4],
+  syrah:      [8, 7, 5, 2, 6],
+  beaujolais: [3, 3, 7, 1, 2],
+  chardonnay: [7, 1, 5, 1, 8],
+  sauvblanc:  [4, 1, 8, 1, 1],
+  riesling:   [3, 1, 8, 6, 1],
+  gewurz:     [5, 1, 4, 5, 2],
+  champagne:  [4, 1, 9, 2, 2],
+  prosecco:   [3, 1, 8, 3, 1],
+  port:       [9, 6, 4, 9, 6],
+  sauternes:  [7, 1, 6, 9, 5],
+  rose:       [4, 2, 7, 3, 2],
+};
+const WINE_DESC = {
+  cabernet:   '진하고 구조감 있는 풀바디. 검은 과실, 시더, 가죽.',
+  pinot:      '실키한 미디엄 바디. 붉은 과실, 흙, 버섯.',
+  chardonnay: '풍성한 오크와 버터, 잘 익은 사과.',
+  riesling:   '꽃향과 라임, 산도와 미세한 단맛의 균형.',
+  champagne:  '브리오슈, 시트러스, 미네랄, 살아있는 거품.',
+  port:       '농밀한 단맛과 견과, 향신료. 디저트의 동반자.',
+  chianti:    '체리와 토마토, 흙. 음식과 함께 빛나는 산도.',
+  beaujolais: '가볍고 신선한 붉은 과실. 차게 마셔도 좋은 레드.',
+  syrah:      '후추와 검은 과실, 야성적 풍미.',
+  sauvblanc:  '풀잎, 시트러스, 구스베리. 명료한 산미.',
+  gewurz:     '리치, 장미, 향신료. 향이 먼저 도착하는 와인.',
+  prosecco:   '배, 사과, 가벼운 거품. 캐주얼한 즐거움.',
+  sauternes:  '꿀과 살구, 보트라이트. 황금빛 디저트.',
+  malbec:     '플럼, 자두, 매끈한 탄닌. 아르헨티나의 자존심.',
+  rose:       '딸기와 수박, 봄바람 같은 산미.',
+};
+
+const FLAVORS = [
+  { key: 'fruit',  label: 'Fruit',     color: '#C75A6A', notes: ['검은 베리','체리','산딸기','자두','블랙커런트'] },
+  { key: 'citrus', label: 'Citrus',    color: '#E5C75A', notes: ['레몬 제스트','자몽','라임','오렌지'] },
+  { key: 'floral', label: 'Floral',    color: '#E58FB5', notes: ['장미','제비꽃','라일락','오렌지 블로섬'] },
+  { key: 'spicy',  label: 'Spicy',     color: '#B8593A', notes: ['검은 후추','정향','시나몬','감초'] },
+  { key: 'oak',    label: 'Oak',       color: '#8B6F47', notes: ['바닐라','시가','시더','구운 토스트'] },
+  { key: 'earth',  label: 'Earth',     color: '#5A4A3A', notes: ['젖은 흙','버섯','낙엽','가죽'] },
+  { key: 'herb',   label: 'Herb',      color: '#6FB47F', notes: ['민트','로즈마리','풀잎','피망'] },
+  { key: 'sweet',  label: 'Sweet',     color: '#D4A038', notes: ['꿀','살구잼','캐러멜','말린 무화과'] },
+];
+const PROFILE_BY_FLAVORS = {
+  fruit_oak: 'Cabernet Sauvignon — 깊은 과실, 오크의 무게',
+  citrus_floral: 'Riesling — 시트러스와 꽃의 가벼움',
+  oak_earth: 'Pinot Noir — 흙과 오크가 짜는 우아함',
+  citrus_herb: 'Sauvignon Blanc — 풀잎과 시트러스의 명료함',
+  spicy_fruit: 'Syrah — 후추와 과실의 야성',
+  sweet_floral: 'Gewürztraminer — 향수 같은 화이트',
+  sweet_oak: 'Sauternes — 꿀과 보트라이트',
+  earth_spicy: 'Rioja — 클래식한 스페인의 무게',
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  round: 0, score: 0, streak: 0, bestStreak: 0,
+  totalAnswered: 0, correctCount: 0,
+  byCategory: { red: {a:0,c:0}, white: {a:0,c:0}, sparkling: {a:0,c:0}, dessert: {a:0,c:0} },
+  currentDish: null, currentChoices: [], answered: false,
+  flavors: new Set(),
+};
+
+/* =========================================================
+   Custom cursor
+   ========================================================= */
+const cur = document.getElementById('cursor');
+const dot = document.getElementById('cursorDot');
+let mx = window.innerWidth/2, my = window.innerHeight/2;
+let cx = mx, cy = my;
+window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx+'px'; dot.style.top = my+'px'; });
+function curLoop() {
+  cx += (mx - cx) * 0.18;
+  cy += (my - cy) * 0.18;
+  cur.style.left = cx+'px';
+  cur.style.top = cy+'px';
+  requestAnimationFrame(curLoop);
+}
+curLoop();
+document.addEventListener('mouseover', e => {
+  if (e.target.closest('button, a, input, .wheel-sector, [data-link]')) cur.classList.add('hover');
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('button, a, input, .wheel-sector, [data-link]')) cur.classList.remove('hover');
+});
+
+/* =========================================================
+   Smooth scroll for nav anchors
+   ========================================================= */
+document.querySelectorAll('[data-link]').forEach(a => {
+  a.addEventListener('click', e => {
+    const href = a.getAttribute('href');
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const t = document.querySelector(href);
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+/* =========================================================
+   Reveal-on-scroll
+   ========================================================= */
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')), { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* =========================================================
+   Toasts
+   ========================================================= */
+function toast(msg, kind='ok', life=1800) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind === 'bad' ? ' bad' : kind === 'streak' ? ' streak' : '');
+  t.textContent = msg;
+  document.getElementById('toastWrap').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, life);
+}
+
+/* =========================================================
+   Audio (subtle ting)
+   ========================================================= */
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+}
+function playTone(freq=880, dur=0.18, type='sine', vol=0.08) {
+  ensureAudio();
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.value = vol;
+  o.connect(g).connect(audioCtx.destination);
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+  o.stop(audioCtx.currentTime + dur);
+}
+function ting() { playTone(1320, 0.22, 'sine', 0.07); setTimeout(()=>playTone(1760, 0.18, 'sine', 0.05), 60); }
+function thud() { playTone(160, 0.28, 'sine', 0.10); }
+
+/* =========================================================
+   Pairing Quiz
+   ========================================================= */
+const dishCard   = document.getElementById('dishCard');
+const dishEmoji  = document.getElementById('dishEmoji');
+const dishName   = document.getElementById('dishName');
+const dishDesc   = document.getElementById('dishDesc');
+const dishMeta   = document.getElementById('dishMeta');
+const wineGrid   = document.getElementById('wineGrid');
+const fbEl       = document.getElementById('quizFb');
+const elRound    = document.getElementById('round');
+const elScore    = document.getElementById('score');
+const elStreak   = document.getElementById('streak');
+
+function shuffle(a) { return a.map(v=>[Math.random(), v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]); }
+
+function pickDish() {
+  state.currentDish = DISHES[Math.floor(Math.random()*DISHES.length)];
+  // Build choices: 1 from correct + 3 random distractors
+  const correct = state.currentDish.correct[0];
+  const others = Object.keys(WINES).filter(k => !state.currentDish.correct.includes(k));
+  state.currentChoices = shuffle([correct, ...shuffle(others).slice(0,3)]);
+  state.answered = false;
+  paintDish();
+  paintWines();
+  fbEl.textContent = '와인을 선택해보세요.';
+  fbEl.classList.add('empty');
+}
+
+function paintDish() {
+  const d = state.currentDish;
+  dishCard.classList.add('flip');
+  setTimeout(()=>dishCard.classList.remove('flip'), 600);
+  dishEmoji.textContent = d.emoji;
+  dishName.textContent  = d.name;
+  dishDesc.textContent  = d.desc;
+  dishMeta.innerHTML    = d.tags.map(t => `<span class="dish-tag">${t}</span>`).join('');
+}
+
+function paintWines() {
+  wineGrid.innerHTML = '';
+  state.currentChoices.forEach(key => {
+    const w = WINES[key];
+    const btn = document.createElement('button');
+    btn.className = 'wine-opt';
+    btn.dataset.key = key;
+    btn.innerHTML = `
+      <svg class="wine-bottle" viewBox="0 0 60 130" xmlns="http://www.w3.org/2000/svg">
+        <rect x="22" y="0" width="16" height="20" rx="2" fill="#1A0A0E"/>
+        <rect x="20" y="18" width="20" height="8" fill="#${w.color.slice(1)}" opacity="0.7"/>
+        <path d="M 18 30 Q 12 50 12 75 L 12 122 Q 12 128 18 128 L 42 128 Q 48 128 48 122 L 48 75 Q 48 50 42 30 L 42 26 L 18 26 Z"
+              fill="${w.color}" stroke="rgba(245,239,227,0.3)" stroke-width="0.5"/>
+        <rect x="16" y="62" width="28" height="32" fill="rgba(245,239,227,0.92)" rx="1"/>
+        <line x1="18" y1="74" x2="42" y2="74" stroke="${w.color}" stroke-width="0.6"/>
+        <line x1="18" y1="80" x2="42" y2="80" stroke="${w.color}" stroke-width="0.4"/>
+        <line x1="18" y1="86" x2="42" y2="86" stroke="${w.color}" stroke-width="0.4"/>
+      </svg>
+      <span class="name">${w.name}</span>
+      <span class="kind">${w.kind}</span>
+    `;
+    btn.addEventListener('click', () => onWinePick(key, btn));
+    wineGrid.appendChild(btn);
+  });
+}
+
+function onWinePick(key, btn) {
+  if (state.answered) return;
+  ensureAudio();
+  state.answered = true;
+  const d = state.currentDish;
+  const isCorrect = d.correct.includes(key);
+  state.totalAnswered++;
+  state.byCategory[d.cat] = state.byCategory[d.cat] || {a:0, c:0};
+  state.byCategory[d.cat].a++;
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    state.correctCount++;
+    state.byCategory[d.cat].c++;
+    state.streak++;
+    state.bestStreak = Math.max(state.bestStreak, state.streak);
+    let pts = 10;
+    if (state.streak >= 3) { pts = 15; toast(`소믈리에 스트릭 +${pts}`, 'streak'); }
+    else { toast(`정답! +${pts}`, 'ok'); }
+    state.score += pts;
+    ting();
+    if (state.streak >= 5) confetti();
+  } else {
+    btn.classList.add('wrong');
+    // highlight the actually-correct one
+    const correct = d.correct[0];
+    document.querySelectorAll('.wine-opt').forEach(b => {
+      if (b.dataset.key === correct) b.classList.add('correct');
+      b.disabled = true;
+    });
+    state.streak = 0;
+    toast('아쉬워요', 'bad');
+    thud();
+  }
+  state.round++;
+
+  // Disable all
+  document.querySelectorAll('.wine-opt').forEach(b => b.disabled = true);
+
+  // Feedback
+  fbEl.classList.remove('empty');
+  fbEl.innerHTML = (isCorrect ? '✓ ' : '✗ ') + d.why;
+
+  // Update HUD
+  elRound.textContent  = state.round;
+  elScore.textContent  = state.score;
+  elStreak.textContent = state.streak;
+
+  // Update dashboard
+  refreshDashboard();
+}
+
+document.getElementById('nextBtn').addEventListener('click', pickDish);
+document.getElementById('resetQuiz').addEventListener('click', () => {
+  Object.assign(state, {
+    round: 0, score: 0, streak: 0, bestStreak: 0,
+    totalAnswered: 0, correctCount: 0,
+    byCategory: { red: {a:0,c:0}, white: {a:0,c:0}, sparkling: {a:0,c:0}, dessert: {a:0,c:0} },
+  });
+  elRound.textContent = 0; elScore.textContent = 0; elStreak.textContent = 0;
+  refreshDashboard();
+  pickDish();
+  toast('새 게임 시작', 'ok');
+});
+
+/* =========================================================
+   Confetti
+   ========================================================= */
+function confetti() {
+  const colors = ['#C75A6A','#C5A572','#F5EFE3','#6B1F2C','#E5C75A','#6FB47F'];
+  for (let i=0; i<60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random()*100) + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.6 + Math.random()*1.2) + 's';
+    p.style.animationDelay = (Math.random()*0.3) + 's';
+    p.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 2800);
+  }
+}
+
+/* =========================================================
+   Flavor Wheel
+   ========================================================= */
+const wheelSvg = document.getElementById('wheelSvg');
+const notesList = document.getElementById('notesList');
+const profileName = document.getElementById('profileName');
+
+function buildWheel() {
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const innerR = 60, outerR = 180;
+  const N = FLAVORS.length;
+  const angle = (2 * Math.PI) / N;
+
+  // Center crystal
+  const center = document.createElementNS(SVG_NS, 'circle');
+  center.setAttribute('r', innerR - 6);
+  center.setAttribute('fill', 'rgba(245,239,227,0.05)');
+  center.setAttribute('stroke', 'var(--gold)');
+  center.setAttribute('stroke-width', '0.8');
+  wheelSvg.appendChild(center);
+
+  // Center text
+  const ctr = document.createElementNS(SVG_NS, 'text');
+  ctr.setAttribute('text-anchor', 'middle');
+  ctr.setAttribute('dy', '5');
+  ctr.setAttribute('fill', 'var(--gold)');
+  ctr.setAttribute('font-family', 'Playfair Display');
+  ctr.setAttribute('font-style', 'italic');
+  ctr.setAttribute('font-size', '20');
+  ctr.textContent = 'taste';
+  wheelSvg.appendChild(ctr);
+
+  FLAVORS.forEach((f, i) => {
+    const a0 = -Math.PI/2 + i * angle;
+    const a1 = -Math.PI/2 + (i+1) * angle;
+    const x0 = Math.cos(a0)*innerR, y0 = Math.sin(a0)*innerR;
+    const x1 = Math.cos(a0)*outerR, y1 = Math.sin(a0)*outerR;
+    const x2 = Math.cos(a1)*outerR, y2 = Math.sin(a1)*outerR;
+    const x3 = Math.cos(a1)*innerR, y3 = Math.sin(a1)*innerR;
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d',
+      `M ${x0} ${y0} L ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 0 0 ${x0} ${y0} Z`);
+    path.setAttribute('fill', f.color);
+    path.setAttribute('opacity', '0.55');
+    path.setAttribute('stroke', 'rgba(0,0,0,0.25)');
+    path.setAttribute('stroke-width', '1');
+    path.classList.add('wheel-sector');
+    path.dataset.key = f.key;
+    path.addEventListener('click', () => toggleFlavor(f.key, path));
+    wheelSvg.appendChild(path);
+
+    // Label
+    const am = (a0 + a1)/2;
+    const lr = (innerR + outerR)/2;
+    const lx = Math.cos(am)*lr, ly = Math.sin(am)*lr;
+    const t = document.createElementNS(SVG_NS, 'text');
+    t.setAttribute('x', lx);
+    t.setAttribute('y', ly);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('dy', '4');
+    t.setAttribute('fill', '#1A0A0E');
+    t.setAttribute('font-family', 'Pretendard, sans-serif');
+    t.setAttribute('font-size', '11');
+    t.setAttribute('font-weight', '700');
+    t.setAttribute('letter-spacing', '2');
+    t.style.pointerEvents = 'none';
+    t.textContent = f.label.toUpperCase();
+    wheelSvg.appendChild(t);
+  });
+}
+buildWheel();
+
+function toggleFlavor(key, el) {
+  ensureAudio();
+  if (state.flavors.has(key)) {
+    state.flavors.delete(key);
+    el.classList.remove('active');
+    el.setAttribute('opacity', '0.55');
+    playTone(440, 0.12, 'sine', 0.05);
+  } else {
+    state.flavors.add(key);
+    el.classList.add('active');
+    el.setAttribute('opacity', '0.95');
+    playTone(660 + Math.random()*200, 0.18, 'sine', 0.06);
+  }
+  paintNotes();
+  paintProfile();
+}
+
+function paintNotes() {
+  notesList.innerHTML = '';
+  if (state.flavors.size === 0) {
+    notesList.innerHTML = '<span class="notes-empty">아직 선택된 노트가 없어요.</span>';
+    return;
+  }
+  state.flavors.forEach(key => {
+    const f = FLAVORS.find(x => x.key === key);
+    f.notes.forEach(n => {
+      const c = document.createElement('span');
+      c.className = 'note-chip';
+      c.innerHTML = `<span class="swatch" style="background:${f.color}"></span>${n}`;
+      notesList.appendChild(c);
+    });
+  });
+}
+function paintProfile() {
+  if (state.flavors.size === 0) { profileName.textContent = '아직 미정'; return; }
+  // Try matching common combos
+  const set = state.flavors;
+  const keys = [...set].sort();
+  for (const combo of Object.keys(PROFILE_BY_FLAVORS)) {
+    const parts = combo.split('_');
+    if (parts.every(p => set.has(p))) {
+      profileName.textContent = PROFILE_BY_FLAVORS[combo];
+      return;
+    }
+  }
+  if (set.size === 1) profileName.textContent = `${FLAVORS.find(f=>f.key===keys[0]).label} 단순형`;
+  else profileName.textContent = `${keys.map(k => FLAVORS.find(f=>f.key===k).label).join(' + ')} 블렌드`;
+}
+
+/* =========================================================
+   Wine Builder (radar chart)
+   ========================================================= */
+const radarSvg = document.getElementById('radarSvg');
+const RADAR_AXES = ['Body','Tannin','Acidity','Sweetness','Oak'];
+const radarMaxR = 130;
+
+function buildRadarStatic() {
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  // Concentric grid
+  for (let r = 1; r <= 5; r++) {
+    const points = RADAR_AXES.map((_, i) => {
+      const a = -Math.PI/2 + (2*Math.PI*i)/RADAR_AXES.length;
+      const rr = (r/5) * radarMaxR;
+      return [Math.cos(a)*rr, Math.sin(a)*rr].join(',');
+    }).join(' ');
+    const poly = document.createElementNS(SVG_NS, 'polygon');
+    poly.setAttribute('class','radar-grid');
+    poly.setAttribute('points', points);
+    radarSvg.appendChild(poly);
+  }
+  // Axes
+  RADAR_AXES.forEach((label, i) => {
+    const a = -Math.PI/2 + (2*Math.PI*i)/RADAR_AXES.length;
+    const x = Math.cos(a)*radarMaxR, y = Math.sin(a)*radarMaxR;
+    const ln = document.createElementNS(SVG_NS, 'line');
+    ln.setAttribute('class','radar-axis');
+    ln.setAttribute('x1', 0); ln.setAttribute('y1', 0);
+    ln.setAttribute('x2', x); ln.setAttribute('y2', y);
+    radarSvg.appendChild(ln);
+
+    const lx = Math.cos(a)*(radarMaxR + 24);
+    const ly = Math.sin(a)*(radarMaxR + 24);
+    const t = document.createElementNS(SVG_NS, 'text');
+    t.setAttribute('class','radar-label');
+    t.setAttribute('x', lx); t.setAttribute('y', ly);
+    t.setAttribute('text-anchor', Math.abs(lx) < 4 ? 'middle' : (lx > 0 ? 'start' : 'end'));
+    t.setAttribute('dy', '4');
+    t.textContent = label.toUpperCase();
+    radarSvg.appendChild(t);
+  });
+  // User polygon
+  const poly = document.createElementNS(SVG_NS, 'polygon');
+  poly.setAttribute('class','radar-poly');
+  poly.id = 'radarPoly';
+  radarSvg.appendChild(poly);
+}
+buildRadarStatic();
+
+function readSliders() {
+  return {
+    body:      Number(document.getElementById('s-body').value),
+    tannin:    Number(document.getElementById('s-tannin').value),
+    acidity:   Number(document.getElementById('s-acidity').value),
+    sweetness: Number(document.getElementById('s-sweetness').value),
+    oak:       Number(document.getElementById('s-oak').value),
+  };
+}
+
+function paintRadar() {
+  const v = readSliders();
+  const arr = [v.body, v.tannin, v.acidity, v.sweetness, v.oak];
+  const points = arr.map((val, i) => {
+    const a = -Math.PI/2 + (2*Math.PI*i)/arr.length;
+    const rr = (val/10) * radarMaxR;
+    return [Math.cos(a)*rr, Math.sin(a)*rr].join(',');
+  }).join(' ');
+  document.getElementById('radarPoly').setAttribute('points', points);
+
+  // Update displayed values + slider fill
+  ['body','tannin','acidity','sweetness','oak'].forEach(k => {
+    const el = document.querySelector(`.val[data-for=${k}]`);
+    el.textContent = v[k];
+    const inp = document.getElementById('s-' + k);
+    inp.style.setProperty('--p', ((v[k]-1)/9*100).toFixed(0) + '%');
+  });
+
+  // Find closest wine
+  let bestKey = null, bestDist = Infinity;
+  Object.entries(WINE_PROFILES).forEach(([k, p]) => {
+    const d = Math.hypot(p[0]-v.body, p[1]-v.tannin, p[2]-v.acidity, p[3]-v.sweetness, p[4]-v.oak);
+    if (d < bestDist) { bestDist = d; bestKey = k; }
+  });
+  const w = WINES[bestKey];
+  document.getElementById('matchName').innerHTML = `${w.name} <em>${w.kind === '풀바디 레드' ? '· bold' : w.kind === '오크 화이트' ? '· buttery' : ''}</em>`;
+  document.getElementById('matchDesc').textContent = WINE_DESC[bestKey] || '';
+  const traitEls = document.getElementById('matchTraits');
+  traitEls.innerHTML = '';
+  ['Body','Tannin','Acidity','Sweetness','Oak'].forEach((label, i) => {
+    const val = arr[i];
+    const span = document.createElement('span');
+    span.className = 'trait';
+    span.textContent = `${label} ${val}`;
+    traitEls.appendChild(span);
+  });
+}
+['s-body','s-tannin','s-acidity','s-sweetness','s-oak'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    paintRadar();
+    playTone(620 + Math.random()*200, 0.05, 'sine', 0.02);
+  });
+});
+
+/* =========================================================
+   Dashboard
+   ========================================================= */
+const elDTotal = document.getElementById('dTotal');
+const elDAcc   = document.getElementById('dAcc');
+const elDBest  = document.getElementById('dBest');
+const elDTop   = document.getElementById('dTop');
+const elBars   = document.getElementById('barChart');
+
+const CAT_LABEL = { red: 'Red Wine', white: 'White Wine', sparkling: 'Sparkling', dessert: 'Dessert' };
+
+function refreshDashboard() {
+  const total = state.totalAnswered;
+  const acc = total ? Math.round((state.correctCount/total)*100) : 0;
+  elDTotal.textContent = total;
+  elDAcc.textContent = acc;
+  elDBest.textContent = state.bestStreak;
+  // Top category
+  let topKey = null, topAcc = -1;
+  Object.entries(state.byCategory).forEach(([k, v]) => {
+    if (v.a >= 1) {
+      const a = v.c / v.a;
+      if (a > topAcc) { topAcc = a; topKey = k; }
+    }
+  });
+  elDTop.textContent = topKey ? CAT_LABEL[topKey] : '—';
+
+  // Bars
+  elBars.innerHTML = '';
+  Object.entries(CAT_LABEL).forEach(([k, label]) => {
+    const v = state.byCategory[k] || { a:0, c:0 };
+    const pct = v.a ? Math.round((v.c/v.a)*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="nm">${label} <small style="color:var(--muted);">(${v.c}/${v.a})</small></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="pct">${pct}%</div>
+    `;
+    elBars.appendChild(row);
+  });
+}
+refreshDashboard();
+
+/* =========================================================
+   Easter egg: brand click 5 times -> confetti + secret
+   ========================================================= */
+const brand = document.getElementById('brand');
+let brandClicks = 0;
+brand.addEventListener('click', () => {
+  brandClicks++;
+  if (brandClicks === 5) {
+    confetti();
+    toast('🍷 비밀의 한 잔이 열렸어요', 'streak');
+    document.getElementById('secret').textContent = 'In Vino Veritas';
+    document.getElementById('secret').style.color = 'var(--gold)';
+    brandClicks = 0;
+  }
+});
+
+/* =========================================================
+   Konami code -> mega confetti
+   ========================================================= */
+const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let kIdx = 0;
+window.addEventListener('keydown', e => {
+  if (e.key === konami[kIdx]) {
+    kIdx++;
+    if (kIdx === konami.length) {
+      kIdx = 0;
+      for (let i=0;i<3;i++) setTimeout(confetti, i*200);
+      toast('🎉 SOMMELIER MODE', 'streak', 2400);
+    }
+  } else { kIdx = 0; }
+});
+
+/* =========================================================
+   Boot
+   ========================================================= */
+pickDish();
+paintRadar();
+
+</script>
+</body>
+</html>
